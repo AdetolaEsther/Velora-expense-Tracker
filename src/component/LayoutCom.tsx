@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { usePathname } from "next/navigation";
+import TransferModal from "../modals/TransferModal";
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -11,6 +12,8 @@ interface LayoutProps {
 
 export default function NavLayout({ children }: LayoutProps) {
     const pathname = usePathname();
+          const [isModalOpen, setModalOpen] = useState(false);
+    const showTransfer = pathname === "/transactions";
 
     const navItems = [
         {
@@ -92,9 +95,8 @@ export default function NavLayout({ children }: LayoutProps) {
                 })}
             </div>
 
-            <div className="flex-1 md:ml-[280px] flex flex-col">
+            <div className="flex-1 md:ml-[280px] flex flex-col ">
                 <div className="fixed top-0 right-0 h-[70px] w-full md:w-[calc(100%-280px)] bg-[#faf9f6] border-b border-black/5 flex items-center justify-end px-6 z-50">
-
                     <div className="flex items-center gap-4">
                         <div className="p-2 rounded-xl bg-black/5 text-gray-600">
                             <Icon
@@ -111,10 +113,27 @@ export default function NavLayout({ children }: LayoutProps) {
                             }}
                         />
                     </div>
+                    
+                    {showTransfer && (
+                        <button
+                            onClick={() => setModalOpen(true)}
+                            className="px-2.5 py-1.5 bg-[#014d4e] text-white border-2 border-white/5 rounded-lg text-sm font-black shadow-md flex items-center ml-3"
+                        >
+                            <Icon
+                                icon="ic:baseline-sync-alt"
+                                className="text-2xl"
+                            />
+                            Add Transaction{" "}
+                        </button>
+                    )}
                 </div>
 
                 <div className="pt-[70px] p-6">{children}</div>
             </div>
+            <TransferModal
+                isOpen={isModalOpen}
+                onClose={() => setModalOpen(false)}
+            />
         </div>
     );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@iconify/react";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 interface ComingSoonProps {
@@ -14,8 +15,18 @@ const ComingSoon: React.FC<ComingSoonProps> = ({
     description = "We're working hard to bring this feature to life. Stay tuned 🚀",
     icon = "solar:rocket-bold-duotone",
 }) => {
+    const router = useRouter();
+
     return (
-        <div className="flex items-center justify-center min-h-[60vh] px-6">
+        <div className="relative flex items-center justify-center min-h-[60vh] px-6">
+            <button
+                onClick={() => router.back()}
+                className="absolute top-6 left-6 flex items-center gap-2 text-sm font-bold text-[#856671] hover:text-black transition-colors"
+            >
+                <Icon icon="mdi:arrow-left" className="text-lg" />
+                Back
+            </button>
+
             <div className="text-center max-w-md">
                 <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-2xl bg-[#d7336c]/10">
                     <Icon icon={icon} className="w-10 h-10 text-[#d7336c]" />

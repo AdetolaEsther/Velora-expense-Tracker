@@ -3,7 +3,7 @@ import React from 'react'
 
 const StatCard = ({ title, amount, trend, color, icon }: any) => (
     <div
-        className={`bg-[#1E1E1E] p-8 rounded-2xl border-t-4 shadow-xl relative group`}
+        className={`bg-[#ffff] p-8 rounded-2xl border-l-4 shadow-xl relative group`}
         style={{ borderColor: color }}
     >
         <div className="flex justify-between items-start mb-6">
@@ -17,7 +17,7 @@ const StatCard = ({ title, amount, trend, color, icon }: any) => (
                 <Icon icon={icon} className="text-2xl" />
             </div>
         </div>
-        <p className="text-white text-4xl font-black mb-2 tracking-tight">
+        <p className="text-[#856671] text-4xl font-black mb-2 tracking-tight">
             {amount}
         </p>
         <p

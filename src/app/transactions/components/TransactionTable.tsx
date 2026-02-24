@@ -8,7 +8,6 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Typography,
     Paper,
 } from "@mui/material";
 import dayjs from "dayjs";
@@ -24,7 +23,7 @@ export const TransactionTable: FC<TransactionTableProps> = ({
     const tableHeaders = ["ID", "Name", "Category", "Date", "Amount", "Type"];
 
     return (
-        <TableContainer component={Paper} sx={{ maxHeight: "60vh" }}>
+        <TableContainer component={Paper} sx={{ maxHeight: "60vh", borderRadius: "12px" }}>
             <Table stickyHeader sx={{ minWidth: 650 }}>
                 <TableHead>
                     <TableRow>
