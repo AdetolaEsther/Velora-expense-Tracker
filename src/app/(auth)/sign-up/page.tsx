@@ -1,13 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
-import {
-    TextField,
-    InputAdornment,
-    IconButton,
-    Checkbox,
-    FormControlLabel,
-} from "@mui/material";
+import { TextField, InputAdornment, IconButton } from "@mui/material";
 import { AuthWrapper } from "@/src/component/AuthWrapper";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
@@ -16,47 +10,51 @@ const Page = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false); 
 
-const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password) return alert("Fill all fields");
 
-    if (!email || !password) return alert("Fill all fields");
+        setLoading(true); 
+        try {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
 
-    try {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+            const user = {
+                id: uuidv4(),
+                email,
+                passwordHash: hashedPassword,
+                createdAt: new Date().toISOString(),
+            };
 
-        const user = {
-            id: uuidv4(),
-            email,
-            passwordHash: hashedPassword,
-            createdAt: new Date().toISOString(),
-        };
+            const res = await fetch("/api/auth/signup", {
+                method: "POST",
+                body: JSON.stringify(user),
+                headers: { "Content-Type": "application/json" },
+            });
 
-        const res = await fetch("/api/auth/signup", {
-            method: "POST",
-            body: JSON.stringify(user),
-            headers: { "Content-Type": "application/json" },
-        });
+            const data = await res.json();
 
-        const data = await res.json();
-
-        if (data.success) {
-            alert("Account created!");
-            setEmail("");
-            setPassword("");
-        } else {
-            alert("Error: " + data.error);
+            if (data.success) {
+                alert("Account created!");
+                setEmail("");
+                setPassword("");
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error signing up");
+        } finally {
+            setLoading(false); 
         }
-    } catch (err) {
-        console.error(err);
-        alert("Error signing up");
-    }
-};
+    };
+
     return (
         <AuthWrapper>
             <div className="mb-6">
-                <h2 className="text-4xl font-black text-[#171214]  mb-2 ">
+                <h2 className="text-4xl font-black text-[#171214] mb-2">
                     Create your account
                 </h2>
                 <p className="text-[#856671] dark:text-gray-400 text-base">
@@ -64,7 +62,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </p>
             </div>
 
-            <form className="space-y-4 " onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-4" onSubmit={handleSubmit}>
                 <TextField
                     fullWidth
                     label="Full Name"
@@ -115,12 +113,18 @@ const handleSubmit = async (e: React.FormEvent) => {
                 />
 
                 <button
-                    className="w-full bg-[#9B59B6] hover:bg-[#8E44AD] transition-all text-white h-14 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-3 mt-4"
                     type="submit"
-                    onClick={handleSubmit}
+                    disabled={loading}
+                    className={`w-full flex items-center justify-center gap-3 h-14 rounded-xl text-lg font-bold transition-all shadow-lg ${
+                        loading
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-[#9B59B6] hover:bg-[#8E44AD] text-white"
+                    }`}
                 >
-                    Get Started
-                    <Icon icon="ic:baseline-forward" className="w-6 h-6" />
+                    {loading ? "Creating account..." : "Get Started"}
+                    {!loading && (
+                        <Icon icon="ic:baseline-forward" className="w-6 h-6" />
+                    )}
                 </button>
             </form>
 
@@ -136,7 +140,11 @@ const handleSubmit = async (e: React.FormEvent) => {
                 <p className="text-[#856671] dark:text-gray-400 font-medium text-sm">
                     Already have an account?
                     <a
-                        className="text-[#d7336c] font-black ml-1 hover:underline"
+                        className={`ml-1 font-black hover:underline ${
+                            loading
+                                ? "text-gray-400 pointer-events-none"
+                                : "text-[#d7336c]"
+                        }`}
                         href="/login"
                     >
                         Log in

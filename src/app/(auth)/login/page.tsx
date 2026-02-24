@@ -11,30 +11,47 @@ const Page = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!email || !password) return alert("Fill all fields");
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password) return alert("Fill all fields");
 
-      try {
-          const res = await fetch("/api/auth/login", {
-              method: "POST",
-              body: JSON.stringify({ email, password }),
-              headers: { "Content-Type": "application/json" },
-          });
+        setLoading(true);
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                body: JSON.stringify({ email, password }),
+                headers: { "Content-Type": "application/json" },
+            });
 
-          const data = await res.json();
+            const data = await res.json();
 
-          if (data.success) {
-              router.push("/dashboard");
-          } else {
-              alert("Login failed: " + data.error);
-          }
-      } catch (err) {
-          console.error(err);
-          alert("Error connecting to server");
-      }
-  };
+            if (data.success) {
+                const userSession = {
+                    userId: data.userId,
+                    email: data.email,
+                    authenticated: true,
+                    loginTime: new Date().toISOString(),
+                };
+
+                localStorage.setItem(
+                    "velora_user",
+                    JSON.stringify(userSession),
+                );
+
+                router.push("/dashboard");
+            } else {
+                alert("Login failed: " + data.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error connecting to server");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <AuthWrapper>
             <div className="mb-6">
@@ -56,6 +73,7 @@ const Page = () => {
                     sx={{ mb: 3 }}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading} // disable while loading
                 />
                 <div className="relative w-full mt-4">
                     <span className="absolute right-0 -top-5 font-bold text-sm text-[#d7336c] cursor-pointer">
@@ -70,6 +88,7 @@ const Page = () => {
                         placeholder="Enter your password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading} // disable while loading
                         InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
@@ -78,6 +97,7 @@ const Page = () => {
                                             setShowPassword(!showPassword)
                                         }
                                         edge="end"
+                                        disabled={loading} // disable while loading
                                     >
                                         <Icon
                                             icon={
@@ -94,11 +114,18 @@ const Page = () => {
                 </div>
 
                 <button
-                    className="w-full bg-[#9B59B6] hover:bg-[#8E44AD] transition-all text-white h-14 rounded-xl font-bold text-lg flex items-center justify-center gap-2 mt-4"
+                    className={`w-full ${
+                        loading
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-[#9B59B6] hover:bg-[#8E44AD]"
+                    } transition-all text-white h-14 rounded-xl font-bold text-lg flex items-center justify-center gap-2 mt-4`}
                     type="submit"
+                    disabled={loading} // ✅ disable button
                 >
-                    Login{" "}
-                    <Icon icon="ic:baseline-forward" className="w-6 h-6" />
+                    {loading ? "Logging in..." : "Login"}
+                    {!loading && (
+                        <Icon icon="ic:baseline-forward" className="w-6 h-6" />
+                    )}
                 </button>
             </form>
 
@@ -107,7 +134,11 @@ const Page = () => {
                     Don't have an account?
                     <Link
                         href="/sign-up"
-                        className="text-[#d7336c] font-black ml-1 hover:underline"
+                        className={`ml-1 font-black hover:underline ${
+                            loading
+                                ? "text-gray-400 pointer-events-none"
+                                : "text-[#d7336c]"
+                        }`}
                     >
                         Sign up
                     </Link>

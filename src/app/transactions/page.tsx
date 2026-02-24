@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import StatCard from "@/src/component/StatsCard";
 import { Transaction } from "@/src/interface/transaction-types";
@@ -9,60 +9,30 @@ import TransferModal from "@/src/modals/TransferModal";
 import TransactionFilters from "@/src/component/FilterCom";
 
 const Page = () => {
-    const RECENT_TRANSACTIONS: Transaction[] = [
-        {
-            id: 1,
-            name: "Nordstrom",
-            category: "Lifestyle",
-            date: "Oct 24, 2023",
-            amount: "-$184.50",
-            type: "expense",
-            icon: "ic:baseline-shopping-bag",
-        },
-        {
-            id: 2,
-            name: "Monthly Salary",
-            category: "Income",
-            date: "Oct 23, 2023",
-            amount: "+$4,100.00",
-            type: "income",
-            icon: "ic:baseline-payments",
-        },
-         {
-                    id: 3,
-                    name: "Electricity Bill",
-                    category: "Bills",
-                    date: "Oct 23, 2023",
-                    amount: "-$120.00",
-                    type: "expense",
-                    icon: "ic:baseline-electric-bolt",
-                },
-                {
-                    id: 4,
-                    name: "Groceries",
-                    category: "Food",
-                    date: "Oct 23, 2023",
-                    amount: "-$150.00",
-                    type: "expense",
-                    icon: "ic:baseline-shopping-cart",
-                },
-                {
-                    id: 5,
-                    name: "Shopping",
-                    category: "Lifestyle",
-                    date: "Oct 23, 2023",
-                    amount: "-$4,100.00",
-                    type: "expense",
-                    icon: "ic:baseline-shopping-cart",
-                },
-    ];
+   
     const [isModalOpen, setModalOpen] = useState(false);
-    const [transactions, setTransactions] = useState([]);
+const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(true);
 
+    const fetchTransactions = async () => {
+        try {
+            const res = await fetch("/api/transactions/get");
+            const data = await res.json();
+            if (data.success) {
+                setTransactions(data.transactions);
+            }
+        } catch (err) {
+            console.error("Failed to fetch:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
     const handleFilterChange = (filters: any) => {
         console.log("Selected Filters:", filters);
     };
-
+  useEffect(() => {
+            fetchTransactions(); 
+    }, []);
     return (
         <NavLayout>
             <div className="w-full bg-[#FAF9F6] p-2">
@@ -85,7 +55,7 @@ const Page = () => {
                         </button>
                     </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
                     <StatCard
                         title="Total Incoming"
@@ -111,14 +81,12 @@ const Page = () => {
                 </div>
                 <TransactionFilters
                     onChange={handleFilterChange}
-                    categories={
-                        RECENT_TRANSACTIONS?.map((t) => t.category) || []
-                    }
+                    categories={transactions?.map((t) => t.category) || []}
                 />
-                
+
                 <TransactionTable
-                    transactions={RECENT_TRANSACTIONS}
-                    isFetching={false}
+                    transactions={transactions}
+                    isFetching={loading}
                 />
             </div>
             <TransferModal

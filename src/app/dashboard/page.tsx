@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import StatCard from "@/src/component/StatsCard";
 import { Transaction } from "@/src/interface/transaction-types";
@@ -7,39 +7,52 @@ import { TransactionTable } from "../transactions/components/TransactionTable";
 import NavLayout from "@/src/component/LayoutCom";
 import TransferModal from "@/src/modals/TransferModal";
 import TransactionFilters from "@/src/component/FilterCom";
-
+import { useRouter } from "next/navigation";       
 const Page = () => {
-    const RECENT_TRANSACTIONS: Transaction[] = [
-        {
-            id: 1,
-            name: "Nordstrom",
-            category: "Lifestyle",
-            date: "Oct 24, 2023",
-            amount: "-$184.50",
-            type: "expense",
-            icon: "ic:baseline-shopping-bag",
-        },
-        {
-            id: 2,
-            name: "Monthly Salary",
-            category: "Income",
-            date: "Oct 23, 2023",
-            amount: "+$4,100.00",
-            type: "income",
-            icon: "ic:baseline-payments",
-        },
-        {
-            id: 2,
-            name: "Monthly Salary",
-            category: "Income",
-            date: "Oct 23, 2023",
-            amount: "+$4,100.00",
-            type: "income",
-            icon: "ic:baseline-payments",
-        },
-       
-    ];
-      const [isModalOpen, setModalOpen] = useState(false);
+    const router = useRouter();
+          const [isModalOpen, setModalOpen] = useState(false);
+
+              const [user, setUser] = useState(null);
+
+
+console.log({user})
+    useEffect(() => {
+        const storedUser = localStorage.getItem("velora_user");
+
+        if (!storedUser) {
+            router.push("/login");
+        } else {
+            setUser(JSON.parse(storedUser));
+        }
+    }, [router]);
+
+const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchTransactions = async () => {
+        try {
+            const res = await fetch("/api/transactions/get");
+            const data = await res.json();
+            if (data.success) {
+                setTransactions(data.transactions);
+            }
+        } catch (err) {
+            console.error("Failed to fetch:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("velora_user");
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+            fetchTransactions(); 
+        }
+    }, []);
+
+    if (!user) return <div className="h-screen bg-[#FAF9F6]" />;
+   
     const handleFilterChange = (filters: any) => {
         console.log("Selected Filters:", filters);
     };
@@ -47,6 +60,9 @@ const Page = () => {
     return (
         <NavLayout>
             <div className="w-full bg-[#FAF9F6] p-2">
+                {/* <p className="text-gray-400 text-xs text-center">
+                    Logged in as: {user.email}
+                </p> */}
                 <div className="flex flex-col items-center text-center mb-14">
                     <h1 className="text-gray-400 text-xs font-black uppercase tracking-[0.3em] mb-3">
                         Total Portfolio Value
@@ -108,15 +124,15 @@ const Page = () => {
                         icon="ic:baseline-auto-awesome"
                     />
                 </div>
-<TransactionFilters
+                <TransactionFilters
                     onChange={handleFilterChange}
                     categories={
-                        RECENT_TRANSACTIONS?.map((t) => t.category) || []
+                        transactions?.map((t) => t.category) || []
                     }
                 />
                 <TransactionTable
-                    transactions={RECENT_TRANSACTIONS}
-                    isFetching={false}
+                    transactions={transactions}
+                    isFetching={loading}
                 />
             </div>
             <TransferModal
