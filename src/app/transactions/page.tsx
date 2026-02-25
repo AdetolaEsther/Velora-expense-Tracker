@@ -7,12 +7,15 @@ import { TransactionTable } from "../transactions/components/TransactionTable";
 import NavLayout from "@/src/component/LayoutCom";
 import TransferModal from "@/src/modals/TransferModal";
 import TransactionFilters from "@/src/component/FilterCom";
-
+interface Filters {
+    dateRange?: string; 
+    category?: string; 
+}
 const Page = () => {
-   
     const [isModalOpen, setModalOpen] = useState(false);
-const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState<Filters>({}); 
 
     const fetchTransactions = async () => {
         try {
@@ -27,12 +30,113 @@ const [transactions, setTransactions] = useState<Transaction[]>([]);
             setLoading(false);
         }
     };
-    const handleFilterChange = (filters: any) => {
-        console.log("Selected Filters:", filters);
+
+    const handleExportCSV = () => {
+        if (!transactions.length) return;
+        const headers = ["ID", "Name", "Category", "Date", "Amount", "Type"];
+
+        const rows = transactions.map((tx) => [
+            tx.id,
+            tx.name,
+            tx.category,
+            new Date(tx.date).toLocaleString(),
+            tx.amount,
+            tx.type,
+        ]);
+
+        const csvContent = [headers, ...rows]
+            .map((row) => row.join(","))
+            .join("\n");
+
+        const blob = new Blob([csvContent], {type: "text/csv;charset=utf-8;",});
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "transactions.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
-  useEffect(() => {
-            fetchTransactions(); 
+
+  const handleFilterChange = (newFilters: Filters) => {
+      setFilters(newFilters);
+  };
+
+  const getFilteredTransactions = () => {
+        let filtered = [...transactions];
+        if (filters.category) {
+            filtered = filtered.filter(
+                (tx) => tx.category === filters.category,
+            );
+        }
+
+        if (filters.dateRange) {
+            const now = new Date();
+
+            filtered = filtered.filter((tx) => {
+                const txDate = new Date(tx.date);
+
+                switch (filters.dateRange) {
+                    case "TODAY":
+                        return txDate.toDateString() === now.toDateString();
+
+                    case "YESTERDAY":
+                        const yesterday = new Date();
+                        yesterday.setDate(now.getDate() - 1);
+                        return (
+                            txDate.toDateString() === yesterday.toDateString()
+                        );
+
+                    case "LAST_7_DAYS":
+                        const last7 = new Date();
+                        last7.setDate(now.getDate() - 7);
+                        return txDate >= last7;
+
+                    case "LAST_30_DAYS":
+                        const last30 = new Date();
+                        last30.setDate(now.getDate() - 30);
+                        return txDate >= last30;
+
+                    default:
+                        return true;
+                }
+            });
+        }
+        return filtered;
+    };
+
+    const calculateMetrics = () => {
+        const now = new Date();
+        let totalIncoming = 0;
+        let totalOutgoing = 0;
+        let monthlyBalance = 0;
+
+        transactions.forEach((tx) => {
+            const txDate = new Date(tx.date);
+            const monthMatch =
+                txDate.getMonth() === now.getMonth() &&
+                txDate.getFullYear() === now.getFullYear();
+
+            if (tx.type === "income") {
+                totalIncoming += Number(tx.amount);
+                if (monthMatch) monthlyBalance += Number(tx.amount);
+            } else if (tx.type === "expense") {
+                totalOutgoing += Number(tx.amount);
+                if (monthMatch) monthlyBalance -= Number(tx.amount);
+            }
+        });
+
+        return { totalIncoming, totalOutgoing, monthlyBalance };
+    };
+
+    const { totalIncoming, totalOutgoing, monthlyBalance } = calculateMetrics();
+
+
+    useEffect(() => {
+        fetchTransactions();
     }, []);
+
     return (
         <NavLayout>
             <div className="w-full bg-[#FAF9F6] p-2">
@@ -46,7 +150,10 @@ const [transactions, setTransactions] = useState<Transaction[]>([]);
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-white  border border-[#e4dcdf]  rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors">
+                        <button
+                            className="flex items-center gap-2 px-4 py-2 bg-white  border border-[#e4dcdf]  rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors"
+                            onClick={handleExportCSV}
+                        >
                             <Icon
                                 icon="ic:baseline-add-circle"
                                 className="text-2xl"
@@ -59,23 +166,23 @@ const [transactions, setTransactions] = useState<Transaction[]>([]);
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
                     <StatCard
                         title="Total Incoming"
-                        amount="$8,200.00"
-                        trend="↑ 12.5% vs Last Period"
+                        amount={`₦${totalIncoming.toLocaleString()}`}
+                        trend="↑ 12.5% vs Last Period" // you can calculate trends separately
                         color="#058758"
                         icon="ic:baseline-payments"
                     />
                     <StatCard
                         title="Total Outgoing"
-                        amount="$3,450.00"
+                        amount={`₦${totalOutgoing.toLocaleString()}`}
                         trend="↓ 4.2% Well Managed"
                         color="#e85709"
                         icon="ic:baseline-shopping-cart"
                     />
                     <StatCard
                         title="Monthly Balance"
-                        amount="$1,150.00"
+                        amount={`₦${monthlyBalance.toLocaleString()}`}
                         trend="↑ 8.1% Compounded"
-                        color="##8a5cf6"
+                        color="#8a5cf6"
                         icon="ic:baseline-auto-awesome"
                     />
                 </div>
@@ -84,8 +191,12 @@ const [transactions, setTransactions] = useState<Transaction[]>([]);
                     categories={transactions?.map((t) => t.category) || []}
                 />
 
-                <TransactionTable
+                {/* <TransactionTable
                     transactions={transactions}
+                    isFetching={loading}
+                /> */}
+                <TransactionTable
+                    transactions={getFilteredTransactions()}
                     isFetching={loading}
                 />
             </div>

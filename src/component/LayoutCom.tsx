@@ -133,13 +133,11 @@ export default function NavLayout({ children }: LayoutProps) {
                 <div className="pt-[70px] p-6">{children}</div>
             </div>
 
-            {/* Modals */}
             <TransferModal
                 isOpen={isTransferModalOpen}
                 onClose={() => setTransferModalOpen(false)}
             />
 
-            {/* Logout Modal */}
             {isLogoutModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
                     <div className="bg-white rounded-xl p-6 w-80 shadow-lg flex flex-col gap-4">

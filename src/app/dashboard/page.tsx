@@ -64,10 +64,10 @@ const [transactions, setTransactions] = useState<Transaction[]>([]);
                     Logged in as: {user.email}
                 </p> */}
                 <div className="flex flex-col items-center text-center mb-14">
-                    <h1 className="text-gray-400 text-xs font-black uppercase tracking-[0.3em] mb-3">
+                    <h1 className="text-[#856671] text-xs font-black uppercase tracking-[0.3em] mb-3">
                         Total Portfolio Value
                     </h1>
-                    <p className="text-white text-6xl md:text-8xl font-black leading-tight tracking-tighter mb-6 drop-shadow-lg">
+                    <p className="text-black text-6xl md:text-8xl font-black leading-tight tracking-tighter mb-6 drop-shadow-lg">
                         $24,560.00
                     </p>
                     <div className="flex items-center gap-2 text-[#6FCF97] font-black bg-[#6FCF97]/20 px-6 py-2 rounded-full text-sm border border-[#6FCF97]/40 shadow-[0_0_20px_rgba(111,207,151,0.1)]">
@@ -126,9 +126,7 @@ const [transactions, setTransactions] = useState<Transaction[]>([]);
                 </div>
                 <TransactionFilters
                     onChange={handleFilterChange}
-                    categories={
-                        transactions?.map((t) => t.category) || []
-                    }
+                    categories={transactions?.map((t) => t.category) || []}
                 />
                 <TransactionTable
                     transactions={transactions}

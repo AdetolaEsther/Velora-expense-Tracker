@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
         const { email, password } = await req.json();
 
         const response = await fetch(
-            "https://script.google.com/macros/s/AKfycbyIi5NY3y8pdDYvOM8qmGhM9mhzDudDTY5IyjBw89LxOGEZyES3_lM_siHcW9eTgaqL4w/exec",
+            "https://script.google.com/macros/s/AKfycbxU0ahjPMK5wvmzeaWe-u1P_xok2EnynNpuE416D7QRV_roijT-iJ3zIJX3H1bT-JD5tg/exec",
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
